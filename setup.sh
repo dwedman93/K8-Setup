@@ -46,4 +46,3 @@ if [[ "${k8_nodetype^}" = "master" ]]; then
     echo 'Init Cluster'
     sudo kubeadm init
 fi
-
