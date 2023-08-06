@@ -11,10 +11,10 @@ export k8_hostname=$(hostname)
 
 
 
-if [[ $k8_nodetype=='master' ]]; then
-echo 'Doing konfiguraion for master node'
-elif [[ $k8_nodetype=='worker' ]]; then
-echo 'This is worker. Doing Konfiguration for worker node'
+if [[ "${k8_nodetype^}" = "master" ]]; then
+    echo 'Doing konfiguraion for master node'
+if [[ "${k8_nodetype^}" = "worker" ]]; then
+    echo 'This is worker. Doing Konfiguration for worker node'
 fi
 
 
@@ -42,8 +42,8 @@ sudo apt update
 sudo apt-get install kubeadm kubelet kubectl kubernetes-cni -y
 
 
-if [[ $k8_nodetype=='master' ]]; then
-echo 'Init Cluster'
-sudo kubeadm init
+if [[ "${k8_nodetype^}" = "master" ]]; then
+    echo 'Init Cluster'
+    sudo kubeadm init
 fi
 
