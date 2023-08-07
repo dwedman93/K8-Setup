@@ -18,65 +18,82 @@ elif [[ "${k8_nodetype^}" = "worker" ]]; then
 fi
 
 
-# Turn swap off
-sudo swapoff -a
+
+sudo apt -y install curl apt-transport-https
+curl  -fsSL  https://packages.cloud.google.com/apt/doc/apt-key.gpg|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes.gpg
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt update
+sudo apt -y install vim git curl wget kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
 
 # comment out swap in /etc/fstab
 sudo sed -e '/swap.img/ s/^#*/#/' -i /etc/fstab
 
-# Install docker
-sudo apt install docker.io -y
+# Turn swap off
+sudo swapoff -a
+sudo mount -a
+free -h
 
 
-cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+# Enable kernel modules
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# Add some settings to sysctl
+sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+# Reload sysctl
+sudo sysctl --system
+
+# Configure persistent loading of modules
+sudo tee /etc/modules-load.d/containerd.conf <<EOF
 overlay
 br_netfilter
 EOF
 
+# Load at runtime
 sudo modprobe overlay
 sudo modprobe br_netfilter
 
-sudo apt-get update
-sudo apt-get install -y containerd
-
-sudo mkdir -p /etc/containerd
-sudo containerd config default | sudo tee /etc/containerd/config.toml
-sudo vi /etc/containerd/config.toml
-#find the [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options] section and change systemdcgroup to true
-#SystemdCgroup = true
-
-sudo systemctl restart containerd
-sudo systemctl enable containerd
-sudo containerd config dump
-
-# sysctl params required by setup, params persist across reboots
-cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-iptables  = 1
+# Ensure sysctl params are set
+sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
-net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
 EOF
 
-# Apply sysctl params without reboot
+# Reload configs
 sudo sysctl --system
 
-sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
+# Install required packages
+sudo apt install -y curl gnupg2 software-properties-common apt-transport-https ca-certificates
+
+# Add Docker repo
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker-archive-keyring.gpg
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+# Install containerd
+sudo apt update
+sudo apt install -y containerd.io
+
+# Configure containerd and start service
+sudo su -
+mkdir -p /etc/containerd
+containerd config default>/etc/containerd/config.toml
+
+# restart containerd
+sudo systemctl restart containerd
+sudo systemctl enable containerd
+systemctl status  containerd
 
 
-sudo apt-get update
-sudo apt-get install -y apt-transport-https ca-certificates curl
-
-# Add repositoy key for downloading and installing kubernetes
-curl -fsSL https://dl.k8s.io/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
-
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-
-sudo apt-get update
-
-# Install kubernetes apps
-
-sudo apt-get install -y kubelet kubeadm kubectl kubernetes-cni
-
-
+sed -i -e '/systemd_cgroup =/ s/= .*/= true/' /etc/containerd/config.toml
 if [[ "${k8_nodetype^}" = "master" ]]; then
     echo 'Init Cluster'
 #    sudo kubeadm init
