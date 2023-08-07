@@ -85,15 +85,15 @@ sudo apt install -y containerd.io
 # Configure containerd and start service
 sudo su -
 mkdir -p /etc/containerd
-containerd config default>/etc/containerd/config.toml
+sudo containerd config default>/etc/containerd/config.toml
 
 # restart containerd
 sudo systemctl restart containerd
 sudo systemctl enable containerd
-systemctl status  containerd
+#systemctl status  containerd
 
 
-sed -i -e '/systemd_cgroup =/ s/= .*/= true/' /etc/containerd/config.toml
+sudo sed -i -e '/systemd_cgroup =/ s/= .*/= true/' /etc/containerd/config.toml
 if [[ "${k8_nodetype^}" = "master" ]]; then
     echo 'Init Cluster'
 #    sudo kubeadm init
