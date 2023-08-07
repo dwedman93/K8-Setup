@@ -10,7 +10,7 @@ echo $k8_nodetype
 
 
 sudo systemctl enable kubelet
-sudo kubeadm config images pull
+
 
 sudo kubeadm config images pull --cri-socket unix:///run/containerd/containerd.sock
 

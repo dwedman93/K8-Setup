@@ -91,7 +91,7 @@ sudo containerd config default>/etc/containerd/config.toml
 sudo systemctl restart containerd
 sudo systemctl enable containerd
 #systemctl status  containerd
-
+exit
 
 sudo sed -i -e '/systemd_cgroup =/ s/= .*/= true/' /etc/containerd/config.toml
 if [[ "${k8_nodetype^}" = "master" ]]; then
