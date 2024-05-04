@@ -5,7 +5,7 @@ export k8_nodetype='master'
 echo $k8_nodetype
 
 # Install dependencies
-./setup.sh
+./setup_all.sh
 
 
 

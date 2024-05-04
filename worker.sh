@@ -4,4 +4,4 @@ export k8_nodetype='worker'
 
 
 
-./setup.sh
+./setup_all.sh

@@ -94,6 +94,7 @@ sudo systemctl enable containerd
 exit
 
 sudo sed -i -e '/systemd_cgroup =/ s/= .*/= true/' /etc/containerd/config.toml
+
 if [[ "${k8_nodetype^}" = "master" ]]; then
     echo 'Init Cluster'
 #    sudo kubeadm init
