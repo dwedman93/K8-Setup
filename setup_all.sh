@@ -16,7 +16,10 @@ net.ipv4.ip_forward = 1
 EOF
 
 sudo swapoff -a
-sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+#sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+# might not be save, works for ubuntu 24.04
+sudo sed -i '/swap/ s/^\(.*\)$/#\1/g' /etc/fstab
 
 sudo modprobe overlay
 sudo modprobe br_netfilter
