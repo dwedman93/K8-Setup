@@ -29,3 +29,5 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Install CNI Plugin (Calico) Others could be flannel, cilium, etc.
 sudo kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+
